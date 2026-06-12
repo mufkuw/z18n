@@ -1,0 +1,14 @@
+{
+    // Arabic translations
+    // Source text shown as comments for translators
+    "5eb63bbbe01eeed093cb22bb8f5acdc3": "مرحبا بالعالم", // hello world
+    "997fa1cd84efa7e95f80d73053df2460": "إجمالي المستندات:", // Total documents:
+    "8b1a9953c4611296a827abf8c47804d7": "مرحبا", // Hello
+    "5d41402abc4b2a76b9719d911017c592": "مرحبا", // hello
+    "0fbdc16325b0b51db173406ee48b590d": "تم حفظ المستند بنجاح", // Document saved successfully
+    "5f4dcc3b5aa765d61d8327deb882cf99": "كلمة المرور", // password
+    "99dea78007133396a7b8ed70578ac6ae": "تسجيل الدخول", // Login
+    "2938c7f7e560ed972f8a4f68e80ff834": "لوحة التحكم", // Dashboard
+    "f4f70727dc34561dfde1a3c529b6205c": "إعدادات", // Settings
+    "0323de4f66a1700e2173e9bcdce02715": "تسجيل الخروج" // Logout
+}

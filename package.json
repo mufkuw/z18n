@@ -1,0 +1,57 @@
+{
+    "name": "z18n",
+    "version": "1.0.0",
+    "description": "Hash-based, zero-configuration multilingual translation system for TypeScript/JavaScript applications",
+    "author": "",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": ""
+    },
+    "bugs": {
+        "url": ""
+    },
+    "homepage": "",
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs",
+            "types": "./dist/index.d.ts"
+        }
+    },
+    "files": [
+        "dist",
+        "translations"
+    ],
+    "sideEffects": false,
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite build --watch",
+        "cli:extract": "bun run src/cli/extract.ts",
+        "cli:translate": "bun run src/cli/translate.ts",
+        "test": "bun test",
+        "prepublishOnly": "bun run build"
+    },
+    "keywords": [
+        "i18n",
+        "translation",
+        "multilingual",
+        "localization",
+        "hash-based",
+        "typescript",
+        "framework-agnostic",
+        "internationalization",
+        "language",
+        "md5"
+    ],
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "terser": "^5.31.0",
+        "typescript": "^5.5.0",
+        "vite": "^5.4.0",
+        "vite-plugin-dts": "^4.0.0"
+    }
+}

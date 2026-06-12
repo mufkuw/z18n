@@ -1,0 +1,246 @@
+# z18n
+
+> **Z**ero-config i**18n** — Hash-based, zero-configuration multilingual translation system for TypeScript/JavaScript applications.
+
+## Why Lang?
+
+- ✅ **No manual keys** — English text automatically generates MD5 hash keys
+- ✅ **Self-documenting** — Code reads naturally in English
+- ✅ **Base language = free** — Zero overhead for source language, no `en.json` needed
+- ✅ **Framework-agnostic** — Works with React, Vue, Angular, Svelte, vanilla JS
+- ✅ **Whitespace-safe** — `"Hello ".t()` preserves spacing, but hashes trim to avoid duplicates
+- ✅ **LLM-powered** — Auto-translate missing entries using OpenAI, Anthropic, or Ollama
+- ✅ **JSONC with comments** — Translation files include source text for translators
+- ✅ **Vite-compatible** — Ships ESM + CJS, tree-shakeable
+
+## Install
+
+```bash
+npm install z18n
+# or
+bun add z18n
+```
+
+## Quick Start
+
+### 1. Initialize
+
+```ts
+import { Lang } from 'z18n';
+
+await Lang.init({
+  baseLocale: 'en',
+  currentLocale: 'ar',
+  translationsPath: '/translations',
+  languages: [
+    { code: 'en', name: 'English', nativeName: 'English', direction: 'ltr', isSource: true },
+    { code: 'ar', name: 'Arabic', nativeName: 'العربية', direction: 'rtl' },
+    { code: 'fr', name: 'French', nativeName: 'Français', direction: 'ltr' },
+  ],
+});
+```
+
+### 2. Use in Code
+
+```ts
+// String extension method
+const title = "Dashboard".t();       // → "لوحة التحكم" (Arabic active)
+const msg = "Hello world".t('fr');   // → "Bonjour le monde"
+
+// Standalone function (if you prefer not to extend String.prototype)
+import { t } from 'z18n';
+const title2 = t("Dashboard");
+```
+
+### 3. Use in HTML
+
+```html
+<h1 translate>Dashboard</h1>
+<p translate>Total documents:</p>
+<!-- MutationObserver auto-detects and translates -->
+<!-- On language change, all [translate] elements update -->
+```
+
+### 4. Switch Language
+
+```ts
+Lang.setLocale('fr');      // All .t() calls now return French
+Lang.setLocale('en');       // Returns original English (zero overhead)
+Lang.toggleLanguage();      // Toggle between base and first target language
+```
+
+## Translation Files
+
+Translation files use **JSONC** (JSON with comments) so translators can see the original English text:
+
+```jsonc
+// translations/ar.jsonc
+{
+  "5eb63bbbe01eeed093cb22bb8f5acdc3": "مرحبا بالعالم",  // hello world
+  "99dea78007133396a7b8ed70578ac6ae": "تسجيل الدخول",   // Login
+  "0323de4f66a1700e2173e9bcdce02715": ""                 // Logout ← needs translation
+}
+```
+
+- **Key = MD5 hash** of trimmed English text — deterministic, collision-proof
+- **Value = translation** in target language
+- **Comment = original English** — so translators know what they're translating
+- **Empty string = missing** — the LLM tool fills these
+
+No `en.jsonc` is needed — English IS the dictionary.
+
+## CLI Tools
+
+### Extract Translatable Strings
+
+```bash
+# Scan source files for .t() calls and [translate] attributes
+bun run src/cli/extract.ts
+```
+
+Finds `"text".t()` in `.ts`/`.tsx` and `<tag translate>text</tag>` in `.html`/`.vue`/`.jsx`, then updates translation files.
+
+### Auto-Translate with LLM
+
+```bash
+# Fill empty translations using AI
+bun run src/cli/translate.ts
+```
+
+Supports **OpenAI** (gpt-4o-mini), **Anthropic** (claude-haiku), and **Ollama** (local). Configure in `lang.config.json`:
+
+```json
+{
+  "llm": {
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "apiKey": "sk-...",
+    "batchSize": 20,
+    "reviewRequired": true
+  }
+}
+```
+
+## API Reference
+
+### `Lang.init(config)`
+
+Initialize the translation system. Call once at app startup.
+
+```ts
+await Lang.init({
+  baseLocale: 'en',           // Source language (never translated)
+  currentLocale: 'ar',        // Active language
+  translationsPath: '/translations',  // Path to .jsonc files
+  languages: [...],           // Available languages
+  observeDOM: true,           // Auto-observe [translate] elements (default: true in browser)
+});
+```
+
+### `"text".t(locale?)`
+
+Translate a string. If `locale` is omitted, uses current locale.
+
+```ts
+"Hello world".t()       // Current locale
+"Hello world".t('ar')   // Specific locale
+```
+
+### `t(text, locale?)`
+
+Standalone translate function (doesn't extend String.prototype).
+
+```ts
+import { t } from 'z18n';
+t("Hello world")        // Current locale
+t("Hello world", 'ar')  // Specific locale
+```
+
+### `Lang.setLocale(locale)`
+
+Switch the active language. Notifies all listeners and updates DOM.
+
+### `Lang.getLocale()`
+
+Get the current locale code.
+
+### `Lang.toggleLanguage()`
+
+Toggle between base locale and first target locale.
+
+### `Lang.onChange(callback)`
+
+Subscribe to language changes. Returns an unsubscribe function.
+
+```ts
+const unsub = Lang.onChange((newLocale, oldLocale) => {
+  console.log(`Language changed: ${oldLocale} → ${newLocale}`);
+});
+// Later: unsub();
+```
+
+### `Lang.loadTranslations(locale, translations)`
+
+Manually load translations for a locale.
+
+### `Lang.destroy()`
+
+Clean up DOM observer and remove String.prototype extension.
+
+## Configuration
+
+### `lang.config.json`
+
+```json
+{
+  "baseLocale": "en",
+  "languages": [
+    { "code": "en", "name": "English", "nativeName": "English", "direction": "ltr", "isSource": true },
+    { "code": "ar", "name": "Arabic", "nativeName": "العربية", "direction": "rtl" },
+    { "code": "fr", "name": "French", "nativeName": "Français", "direction": "ltr" }
+  ],
+  "translationsDir": "./translations",
+  "srcDirs": ["./src"],
+  "includePatterns": ["**/*.ts", "**/*.tsx", "**/*.html", "**/*.jsx", "**/*.vue"],
+  "excludePatterns": ["**/node_modules/**", "**/dist/**"],
+  "llm": {
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "batchSize": 20,
+    "reviewRequired": true
+  }
+}
+```
+
+## How It Works
+
+```
+"Hello world".t()
+       │
+       ├── Locale is 'en' (base)? → Return "Hello world" immediately
+       │
+       └── Locale is 'ar'/'fr'/etc?
+           │
+           ├── MD5("Hello world") → "5eb63bbbe01eeed093cb22bb8f5acdc3"
+           ├── Lookup ar.jsonc["5eb63bbbe01eeed093cb22bb8f5acdc3"]
+           ├── Found? → Return "مرحبا بالعالم"
+           └── Not found? → Return original "Hello world"
+```
+
+Whitespace is trimmed before hashing but preserved in output:
+
+```
+"  Hello world  ".t()  →  "  مرحبا بالعالم  "
+" Hello world ".t()    →  " مرحبا بالعالم "
+```
+
+## Build
+
+```bash
+bun run build    # Vite build → dist/index.mjs + dist/index.cjs
+bun test         # Run tests
+```
+
+## License
+
+MIT

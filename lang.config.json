@@ -1,0 +1,46 @@
+{
+    "baseLocale": "en",
+    "languages": [
+        {
+            "code": "en",
+            "name": "English",
+            "nativeName": "English",
+            "direction": "ltr",
+            "isSource": true
+        },
+        {
+            "code": "ar",
+            "name": "Arabic",
+            "nativeName": "العربية",
+            "direction": "rtl"
+        },
+        {
+            "code": "fr",
+            "name": "French",
+            "nativeName": "Français",
+            "direction": "ltr"
+        }
+    ],
+    "translationsDir": "./translations",
+    "srcDirs": [
+        "./src"
+    ],
+    "includePatterns": [
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.html",
+        "**/*.jsx",
+        "**/*.vue"
+    ],
+    "excludePatterns": [
+        "**/node_modules/**",
+        "**/dist/**",
+        "**/*.test.*"
+    ],
+    "llm": {
+        "provider": "openai",
+        "model": "gpt-4o-mini",
+        "batchSize": 20,
+        "reviewRequired": true
+    }
+}
