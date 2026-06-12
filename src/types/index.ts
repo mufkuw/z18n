@@ -15,7 +15,7 @@ export interface LanguageConfig {
 }
 
 /**
- * Initialization configuration for the Lang system
+ * Initialization configuration for z18n
  */
 export interface LangConfig {
     /** Base/source locale code (default: 'en') */
@@ -26,7 +26,7 @@ export interface LangConfig {
     languages: LanguageConfig[];
     /** Path to translations directory (browser: URL, Node: file path) */
     translationsPath?: string;
-    /** Whether to auto-observe DOM for [translate] attributes (default: true in browser) */
+    /** Whether to auto-observe DOM for [z18n] attributes (default: true in browser) */
     observeDOM?: boolean;
 }
 

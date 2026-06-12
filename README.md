@@ -2,7 +2,7 @@
 
 > **Z**ero-config i**18n** — Hash-based, zero-configuration multilingual translation system for TypeScript/JavaScript applications.
 
-## Why Lang?
+## Why z18n?
 
 - ✅ **No manual keys** — English text automatically generates MD5 hash keys
 - ✅ **Self-documenting** — Code reads naturally in English
@@ -26,9 +26,9 @@ bun add z18n
 ### 1. Initialize
 
 ```ts
-import { Lang } from 'z18n';
+import { z18n } from 'z18n';
 
-await Lang.init({
+await z18n.init({
   baseLocale: 'en',
   currentLocale: 'ar',
   translationsPath: '/translations',
@@ -55,18 +55,18 @@ const title2 = t("Dashboard");
 ### 3. Use in HTML
 
 ```html
-<h1 translate>Dashboard</h1>
-<p translate>Total documents:</p>
+<h1 z18n>Dashboard</h1>
+<p z18n>Total documents:</p>
 <!-- MutationObserver auto-detects and translates -->
-<!-- On language change, all [translate] elements update -->
+<!-- On language change, all [z18n] elements update -->
 ```
 
 ### 4. Switch Language
 
 ```ts
-Lang.setLocale('fr');      // All .t() calls now return French
-Lang.setLocale('en');       // Returns original English (zero overhead)
-Lang.toggleLanguage();      // Toggle between base and first target language
+z18n.setLanguage('fr');      // All .t() calls now return French
+z18n.setLanguage('en');       // Returns original English (zero overhead)
+z18n.toggleLanguage();      // Toggle between base and first target language
 ```
 
 ## Translation Files
@@ -94,11 +94,11 @@ No `en.jsonc` is needed — English IS the dictionary.
 ### Extract Translatable Strings
 
 ```bash
-# Scan source files for .t() calls and [translate] attributes
+# Scan source files for .t() calls and [z18n] attributes
 bun run src/cli/extract.ts
 ```
 
-Finds `"text".t()` in `.ts`/`.tsx` and `<tag translate>text</tag>` in `.html`/`.vue`/`.jsx`, then updates translation files.
+Finds `"text".t()` in `.ts`/`.tsx` and `<tag z18n>text</tag>` in `.html`/`.vue`/`.jsx`, then updates translation files.
 
 ### Auto-Translate with LLM
 
@@ -107,7 +107,7 @@ Finds `"text".t()` in `.ts`/`.tsx` and `<tag translate>text</tag>` in `.html`/`.
 bun run src/cli/translate.ts
 ```
 
-Supports **OpenAI** (gpt-4o-mini), **Anthropic** (claude-haiku), and **Ollama** (local). Configure in `lang.config.json`:
+Supports **OpenAI** (gpt-4o-mini), **Anthropic** (claude-haiku), and **Ollama** (local). Configure in `z18n.config.json`:
 
 ```json
 {
@@ -123,17 +123,17 @@ Supports **OpenAI** (gpt-4o-mini), **Anthropic** (claude-haiku), and **Ollama** 
 
 ## API Reference
 
-### `Lang.init(config)`
+### `z18n.init(config)`
 
 Initialize the translation system. Call once at app startup.
 
 ```ts
-await Lang.init({
+await z18n.init({
   baseLocale: 'en',           // Source language (never translated)
   currentLocale: 'ar',        // Active language
   translationsPath: '/translations',  // Path to .jsonc files
   languages: [...],           // Available languages
-  observeDOM: true,           // Auto-observe [translate] elements (default: true in browser)
+  observeDOM: true,           // Auto-observe [z18n] elements (default: true in browser)
 });
 ```
 
@@ -156,40 +156,40 @@ t("Hello world")        // Current locale
 t("Hello world", 'ar')  // Specific locale
 ```
 
-### `Lang.setLocale(locale)`
+### `z18n.setLanguage(locale)`
 
 Switch the active language. Notifies all listeners and updates DOM.
 
-### `Lang.getLocale()`
+### `z18n.getLocale()`
 
 Get the current locale code.
 
-### `Lang.toggleLanguage()`
+### `z18n.toggleLanguage()`
 
 Toggle between base locale and first target locale.
 
-### `Lang.onChange(callback)`
+### `z18n.onChange(callback)`
 
 Subscribe to language changes. Returns an unsubscribe function.
 
 ```ts
-const unsub = Lang.onChange((newLocale, oldLocale) => {
+const unsub = z18n.onChange((newLocale, oldLocale) => {
   console.log(`Language changed: ${oldLocale} → ${newLocale}`);
 });
 // Later: unsub();
 ```
 
-### `Lang.loadTranslations(locale, translations)`
+### `z18n.loadTranslations(locale, translations)`
 
 Manually load translations for a locale.
 
-### `Lang.destroy()`
+### `z18n.destroy()`
 
 Clean up DOM observer and remove String.prototype extension.
 
 ## Configuration
 
-### `lang.config.json`
+### `z18n.config.json`
 
 ```json
 {

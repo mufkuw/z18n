@@ -5,7 +5,7 @@ import { validateLanguages, getSourceLanguage } from './lang-config';
 import type { LangConfig, LangChangeListener } from '../types/index';
 
 /**
- * LangService — the core translation engine.
+ * LangService — the core translation engine for z18n.
  * 
  * Manages:
  * - Current locale
@@ -23,7 +23,7 @@ export class LangService {
     }
 
     /**
-     * Initialize the Lang system.
+     * Initialize the z18n system.
      * Call this once at app startup.
      */
     init(userConfig: LangConfig): void {
@@ -40,14 +40,14 @@ export class LangService {
         // Validate
         const errors = validateLanguages(config.languages);
         if (errors.length > 0) {
-            throw new Error(`[lang] Configuration errors:\n${errors.join('\n')}`);
+            throw new Error(`[z18n] Configuration errors:\n${errors.join('\n')}`);
         }
 
         // Ensure source language matches baseLocale
         const source = getSourceLanguage(config.languages);
         if (source.code !== baseLocale) {
             throw new Error(
-                `[lang] Source language code "${source.code}" does not match baseLocale "${baseLocale}". ` +
+                `[z18n] Source language code "${source.code}" does not match baseLocale "${baseLocale}". ` +
                 `The isSource language must match baseLocale.`
             );
         }
@@ -87,10 +87,10 @@ export class LangService {
     }
 
     /**
-     * Set the current locale.
+     * Set the current language.
      * Triggers all listeners and updates DOM direction.
      */
-    setLocale(locale: string): void {
+    setLanguage(locale: string): void {
         const oldLocale = config.currentLocale;
         if (locale === oldLocale) return;
 
@@ -102,7 +102,7 @@ export class LangService {
             try {
                 listener(locale, oldLocale);
             } catch (e) {
-                console.error('[lang] Error in language change listener:', e);
+                console.error('[z18n] Error in language change listener:', e);
             }
         }
     }
@@ -184,10 +184,10 @@ export class LangService {
         if (this.isBaseLocale()) {
             const targets = config.targetLanguages;
             if (targets.length > 0) {
-                this.setLocale(targets[0].code);
+                this.setLanguage(targets[0].code);
             }
         } else {
-            this.setLocale(config.baseLocale);
+            this.setLanguage(config.baseLocale);
         }
     }
 

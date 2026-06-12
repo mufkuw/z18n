@@ -1,17 +1,17 @@
 #!/usr/bin/env bun
 
 /**
- * Lang Extract CLI — scans source files for translatable strings.
+ * z18n Extract CLI — scans source files for translatable strings.
  * 
  * Finds:
  *   - "text".t() in .ts/.tsx files
- *   - <span translate>text</span> in .html/.jsx/.vue files
+ *   - <span z18n>text</span> in .html/.jsx/.vue files
  * 
  * Generates/updates .jsonc translation files with hash keys.
  * 
  * Usage:
  *   bun run src/cli/extract.ts
- *   bun run src/cli/extract.ts --config lang.config.json
+ *   bun run src/cli/extract.ts --config z18n.config.json
  */
 
 import { md5, extractWhitespace } from '../core/hash';
@@ -148,13 +148,13 @@ function extractFromTS(content: string, filePath: string): ExtractedString[] {
 
 /**
  * Extract translatable strings from HTML/JSX/VUE files.
- * Matches patterns: <tag translate>text</tag>
+ * Matches patterns: <tag z18n>text</tag>
  */
 function extractFromHTML(content: string, filePath: string): ExtractedString[] {
     const results: ExtractedString[] = [];
 
-    // Match <anyTag translate>text</anyTag>
-    const regex = /<([a-zA-Z][a-zA-Z0-9-]*)\s+[^>]*translate[^>]*>([^<]+)<\/\1>/gi;
+    // Match <anyTag z18n>text</anyTag>
+    const regex = /<([a-zA-Z][a-zA-Z0-9-]*)\s+[^>]*z18n[^>]*>([^<]+)<\/\1>/gi;
 
     let match: RegExpExecArray | null;
     while ((match = regex.exec(content)) !== null) {
@@ -188,12 +188,12 @@ function extractFromFile(filePath: string): ExtractedString[] {
 // ─── Main ───────────────────────────────────────────────────────────────
 
 function main(): void {
-    console.log('🔍 Lang Translation Extraction Tool');
+    console.log('🔍 z18n Translation Extraction Tool');
     console.log('═══════════════════════════════════════════════════════════════');
     console.log();
 
     // Load config
-    const configPath = path.resolve('lang.config.json');
+    const configPath = path.resolve('z18n.config.json');
     let userConfig: Partial<ExtractConfig> = {};
 
     if (fs.existsSync(configPath)) {
@@ -201,7 +201,7 @@ function main(): void {
         const configContent = fs.readFileSync(configPath, 'utf-8');
         userConfig = JSON.parse(configContent);
     } else {
-        console.log('ℹ️  No lang.config.json found, using defaults');
+        console.log('ℹ️  No z18n.config.json found, using defaults');
     }
 
     const config: ExtractConfig = {
@@ -214,7 +214,7 @@ function main(): void {
     };
 
     if (config.languages.length === 0) {
-        console.error('❌ No languages configured. Add languages to lang.config.json');
+        console.error('❌ No languages configured. Add languages to z18n.config.json');
         process.exit(1);
     }
 

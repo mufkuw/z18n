@@ -19,7 +19,7 @@ export const DEFAULT_LANGUAGES: LanguageConfig[] = [
 export function getSourceLanguage(languages: LanguageConfig[]): LanguageConfig {
     const source = languages.find(l => l.isSource);
     if (!source) {
-        throw new Error('[lang] No source language defined. Mark one language with isSource: true');
+        throw new Error('[z18n] No source language defined. Mark one language with isSource: true');
     }
     return source;
 }

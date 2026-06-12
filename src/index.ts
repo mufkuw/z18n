@@ -1,10 +1,10 @@
 /**
- * Lang — Hash-based, zero-configuration multilingual translation system.
+ * z18n — Hash-based, zero-configuration multilingual translation system.
  * 
  * @example
- * import { Lang } from 'lang';
+ * import { z18n } from 'z18n';
  * 
- * await Lang.init({
+ * await z18n.init({
  *   baseLocale: 'en',
  *   languages: [
  *     { code: 'en', name: 'English', nativeName: 'English', direction: 'ltr', isSource: true },
@@ -18,7 +18,7 @@
  * "Hello world".t('ar')   // → Arabic translation
  * 
  * // Or use t() function (if you don't want to extend String.prototype)
- * import { t } from 'lang';
+ * import { t } from 'z18n';
  * t("Hello world");
  */
 
@@ -38,14 +38,14 @@ let domDirective: DOMDirective | null = null;
 let tFunction: ((text: string, locale?: string) => string) | null = null;
 
 /**
- * Lang — the main entry point for the translation system.
+ * z18n — the main entry point for the translation system.
  */
-export const Lang = {
+export const z18n = {
     /**
-     * Initialize the Lang system.
+     * Initialize the z18n system.
      * Call this once at app startup.
      * 
-     * @param userConfig - Configuration for the Lang system
+     * @param userConfig - Configuration for the z18n system
      */
     async init(userConfig: LangConfig): Promise<void> {
         // Initialize the service
@@ -98,10 +98,10 @@ export const Lang = {
     },
 
     /**
-     * Set the current locale. Triggers re-translation of DOM elements.
+     * Set the current language. Triggers re-translation of DOM elements.
      */
-    setLocale(locale: string): void {
-        langService.setLocale(locale);
+    setLanguage(locale: string): void {
+        langService.setLanguage(locale);
     },
 
     /**
@@ -185,7 +185,7 @@ export const Lang = {
  * Use this if you prefer not to extend String.prototype.
  * 
  * @example
- * import { t } from 'lang';
+ * import { t } from 'z18n';
  * t("Hello world")      // → current locale translation
  * t("Hello world", 'ar') // → Arabic translation
  */
@@ -252,4 +252,4 @@ export {
 } from './core/lang-config';
 
 // Default export
-export default Lang;
+export default z18n;

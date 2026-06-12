@@ -108,7 +108,7 @@ export function parseJsoncWithSources(text: string): {
 export async function loadFromUrl(url: string, dictionary: Dictionary, locale: string): Promise<void> {
     const response = await fetch(url);
     if (!response.ok) {
-        throw new Error(`[lang] Failed to load translations from ${url}: ${response.status}`);
+        throw new Error(`[z18n] Failed to load translations from ${url}: ${response.status}`);
     }
     const text = await response.text();
     const translations = parseJsonc(text);

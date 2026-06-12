@@ -2,16 +2,16 @@ import { LangService } from '../core/lang-service';
 import { hashString } from '../core/hash';
 
 /**
- * DOM Translation Directive — observes elements with [translate] attribute
+ * DOM Translation Directive — observes elements with [z18n] attribute
  * and auto-translates their text content on language change.
  * 
  * Usage in HTML:
- *   <span translate>Hello world</span>
- *   <div translate>Total documents:</div>
+ *   <span z18n>Hello world</span>
+ *   <div z18n>Total documents:</div>
  * 
  * The directive:
- * 1. Scans the DOM for elements with [translate] attribute
- * 2. Stores the original text as data-translate-original
+ * 1. Scans the DOM for elements with [z18n] attribute
+ * 2. Stores the original text as data-z18n-original
  * 3. On language change, re-translates all observed elements
  * 4. Handles dynamically added elements via MutationObserver
  */
@@ -50,7 +50,7 @@ export class DOMDirective {
                     if (node instanceof Element) {
                         this.processElement(node);
                         // Also check children
-                        const translatables = node.querySelectorAll('[translate]');
+                        const translatables = node.querySelectorAll('[z18n]');
                         for (const child of translatables) {
                             this.processElement(child);
                         }
@@ -85,12 +85,12 @@ export class DOMDirective {
     }
 
     /**
-     * Scan the entire DOM for [translate] elements and translate them.
+     * Scan the entire DOM for [z18n] elements and translate them.
      */
     private scanAndTranslate(): void {
         if (typeof document === 'undefined') return;
 
-        const elements = document.querySelectorAll('[translate]');
+        const elements = document.querySelectorAll('[z18n]');
         for (const element of elements) {
             this.processElement(element);
         }
@@ -103,15 +103,15 @@ export class DOMDirective {
         // Skip if already processed
         if (this.elements.has(element)) return;
 
-        // Check if it has the translate attribute
-        if (!element.hasAttribute('translate')) return;
+        // Check if it has the z18n attribute
+        if (!element.hasAttribute('z18n')) return;
 
         const text = element.textContent?.trim() ?? '';
         if (!text) return;
 
         // Store original text
         this.elements.set(element, text);
-        element.setAttribute('data-translate-original', text);
+        element.setAttribute('data-z18n-original', text);
 
         // Translate immediately
         const translated = this.langService.translate(text);

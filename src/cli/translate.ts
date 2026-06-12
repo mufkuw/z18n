@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 /**
- * Lang Translate CLI — auto-translate missing entries using LLM.
+ * z18n Translate CLI — auto-translate missing entries using LLM.
  * 
  * Reads .jsonc translation files, finds empty entries,
  * and uses an LLM to fill in translations.
@@ -228,14 +228,14 @@ async function callLLM(request: TranslationRequest, config: LLMConfig): Promise<
 // ─── Main ───────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
-    console.log('🌍 Lang LLM Translation Tool');
+    console.log('🌍 z18n LLM Translation Tool');
     console.log('═══════════════════════════════════════════════════════════════');
     console.log();
 
     // Load config
-    const configPath = path.resolve('lang.config.json');
+    const configPath = path.resolve('z18n.config.json');
     if (!fs.existsSync(configPath)) {
-        console.error('❌ lang.config.json not found. Run "lang extract" first.');
+        console.error('❌ z18n.config.json not found. Run "z18n extract" first.');
         process.exit(1);
     }
 
@@ -243,7 +243,7 @@ async function main(): Promise<void> {
     const config: TranslateConfig = JSON.parse(configContent);
 
     if (!config.llm) {
-        console.error('❌ No LLM configuration found in lang.config.json.');
+        console.error('❌ No LLM configuration found in z18n.config.json.');
         console.error('   Add an "llm" section with provider, model, and apiKey.');
         process.exit(1);
     }

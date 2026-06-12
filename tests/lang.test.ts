@@ -236,7 +236,7 @@ describe('lang-service', () => {
         expect(service.translate(' hello world')).toBe(' مرحبا بالعالم');
     });
 
-    test('setLocale changes locale and notifies listeners', () => {
+    test('setLanguage changes locale and notifies listeners', () => {
         const service = createService();
         service.init({
             baseLocale: 'en',
@@ -249,7 +249,7 @@ describe('lang-service', () => {
             changes.push({ newLocale, oldLocale });
         });
 
-        service.setLocale('ar');
+        service.setLanguage('ar');
         expect(service.getLocale()).toBe('ar');
         expect(changes).toHaveLength(1);
         expect(changes[0]).toEqual({ newLocale: 'ar', oldLocale: 'en' });
@@ -266,11 +266,11 @@ describe('lang-service', () => {
         let count = 0;
         const unsub = service.onChange(() => { count++; });
 
-        service.setLocale('ar');
+        service.setLanguage('ar');
         expect(count).toBe(1);
 
         unsub();
-        service.setLocale('en');
+        service.setLanguage('en');
         expect(count).toBe(1);
     });
 

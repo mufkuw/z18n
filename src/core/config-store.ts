@@ -9,8 +9,8 @@ const DEFAULTS = {
 };
 
 /**
- * Central configuration store for the Lang system.
- * Initialized once via Lang.init().
+ * Central configuration store for the z18n system.
+ * Initialized once via z18n.init().
  */
 export class LangConfigStore {
     baseLocale: string;

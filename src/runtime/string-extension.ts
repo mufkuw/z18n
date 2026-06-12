@@ -8,7 +8,7 @@ import { extractWhitespace, hashString } from '../core/hash';
  *   "Hello world".t()
  *   "Hello world".t('ar')
  * 
- * Must be called after Lang.init() to have access to the service.
+ * Must be called after z18n.init() to have access to the service.
  */
 export function initStringExtension(langService: LangService): void {
     // Extend String.prototype with .t() method
