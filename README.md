@@ -1,29 +1,45 @@
 # z18n
 
-> **Z**ero-config i**18n** — Hash-based, zero-configuration multilingual translation system for TypeScript/JavaScript applications.
+> **Z**ero-config i**18n** — Your code in English. Every language, zero key management.
 
-## Why z18n?
+---
 
-- ✅ **No manual keys** — English text automatically generates MD5 hash keys
-- ✅ **Self-documenting** — Code reads naturally in English
-- ✅ **Base language = free** — Zero overhead for source language, no `en.json` needed
-- ✅ **Framework-agnostic** — Works with React, Vue, Angular, Svelte, vanilla JS
-- ✅ **Whitespace-safe** — `"Hello ".t()` preserves spacing, but hashes trim to avoid duplicates
-- ✅ **LLM-powered** — Auto-translate missing entries using OpenAI, Anthropic, or Ollama
-- ✅ **JSONC with comments** — Translation files include source text for translators
-- ✅ **Vite-compatible** — Ships ESM + CJS, tree-shakeable
+## The Problem
 
-## Install
+Adding i18n to a project is painful:
 
-```bash
-npm install z18n
-# or
-bun add z18n
+- **Manual keys** — You invent keys like `login.button.text`, maintain a separate `en.json`, and keep code and keys in sync forever
+- **Key soup** — `t('auth.login.submit')` tells you nothing. Where's the actual text?
+- **Source language file** — You ship an `en.json` that's 1:1 with your code. Why duplicate it?
+- **Whitespace bugs** — `"  Hello  "` gets a different hash than `"Hello"`, bloating dictionaries
+- **HTML duplication** — Every framework reinvents `<span translate>text</span>` differently
+
+## The Solution
+
+**z18n** turns your English strings into hash keys automatically. No manual keys. No source language file. No key management.
+
+```ts
+// Your code IS the key
+"Hello world".t()       // → "مرحبا بالعالم" (Arabic)
+"Hello world".t('fr')   // → "Bonjour le monde" (French)
+
+// In HTML — just add z18n
+<h1 z18n>Dashboard</h1>  // → <h1 z18n>لوحة التحكم</h1>
 ```
+
+**How?** MD5 of trimmed text = dictionary key. Whitespace is preserved in output but stripped before hashing, so `"  Hello  "` and `"Hello"` map to the same entry.
+
+---
 
 ## Quick Start
 
-### 1. Initialize
+**1. Install**
+
+```bash
+npm install z18n
+```
+
+**2. Initialize** (once at app startup)
 
 ```ts
 import { z18n } from 'z18n';
@@ -35,43 +51,42 @@ await z18n.init({
   languages: [
     { code: 'en', name: 'English', nativeName: 'English', direction: 'ltr', isSource: true },
     { code: 'ar', name: 'Arabic', nativeName: 'العربية', direction: 'rtl' },
-    { code: 'fr', name: 'French', nativeName: 'Français', direction: 'ltr' },
   ],
 });
 ```
 
-### 2. Use in Code
+**3. Translate**
 
 ```ts
-// String extension method
-const title = "Dashboard".t();       // → "لوحة التحكم" (Arabic active)
-const msg = "Hello world".t('fr');   // → "Bonjour le monde"
+// String extension — use anywhere
+"Hello world".t()         // current locale
+"Hello world".t('ar')     // specific locale
 
-// Standalone function (if you prefer not to extend String.prototype)
+// Standalone function — if you don't want String.prototype extension
 import { t } from 'z18n';
-const title2 = t("Dashboard");
-```
+t("Hello world")
+t("Hello world", 'ar')
 
-### 3. Use in HTML
-
-```html
+// HTML — just add z18n attribute
 <h1 z18n>Dashboard</h1>
 <p z18n>Total documents:</p>
-<!-- MutationObserver auto-detects and translates -->
-<!-- On language change, all [z18n] elements update -->
+<!-- MutationObserver auto-detects, translates, updates on language change -->
 ```
 
-### 4. Switch Language
+**4. Switch language**
 
 ```ts
-z18n.setLanguage('fr');      // All .t() calls now return French
-z18n.setLanguage('en');       // Returns original English (zero overhead)
-z18n.toggleLanguage();      // Toggle between base and first target language
+z18n.setLanguage('fr')    // all .t() and [z18n] elements update instantly
+z18n.toggleLanguage()     // toggle between base and target
 ```
+
+That's it. No keys, no source file, no config hell.
+
+---
 
 ## Translation Files
 
-Translation files use **JSONC** (JSON with comments) so translators can see the original English text:
+No `en.jsonc` needed — English IS the dictionary. Target language files use **JSONC** so translators see the original text:
 
 ```jsonc
 // translations/ar.jsonc
@@ -82,135 +97,14 @@ Translation files use **JSONC** (JSON with comments) so translators can see the 
 }
 ```
 
-- **Key = MD5 hash** of trimmed English text — deterministic, collision-proof
-- **Value = translation** in target language
-- **Comment = original English** — so translators know what they're translating
-- **Empty string = missing** — the LLM tool fills these
+| Part | Purpose |
+|------|---------|
+| **Key** | MD5 hash of trimmed English text — deterministic, collision-proof |
+| **Value** | Translation in target language |
+| **Comment** | Original English — so translators know context |
+| **Empty string** | Missing translation — the LLM tool fills these |
 
-No `en.jsonc` is needed — English IS the dictionary.
-
-## CLI Tools
-
-### Extract Translatable Strings
-
-```bash
-# Scan source files for .t() calls and [z18n] attributes
-bun run src/cli/extract.ts
-```
-
-Finds `"text".t()` in `.ts`/`.tsx` and `<tag z18n>text</tag>` in `.html`/`.vue`/`.jsx`, then updates translation files.
-
-### Auto-Translate with LLM
-
-```bash
-# Fill empty translations using AI
-bun run src/cli/translate.ts
-```
-
-Supports **OpenAI** (gpt-4o-mini), **Anthropic** (claude-haiku), and **Ollama** (local). Configure in `z18n.config.json`:
-
-```json
-{
-  "llm": {
-    "provider": "openai",
-    "model": "gpt-4o-mini",
-    "apiKey": "sk-...",
-    "batchSize": 20,
-    "reviewRequired": true
-  }
-}
-```
-
-## API Reference
-
-### `z18n.init(config)`
-
-Initialize the translation system. Call once at app startup.
-
-```ts
-await z18n.init({
-  baseLocale: 'en',           // Source language (never translated)
-  currentLocale: 'ar',        // Active language
-  translationsPath: '/translations',  // Path to .jsonc files
-  languages: [...],           // Available languages
-  observeDOM: true,           // Auto-observe [z18n] elements (default: true in browser)
-});
-```
-
-### `"text".t(locale?)`
-
-Translate a string. If `locale` is omitted, uses current locale.
-
-```ts
-"Hello world".t()       // Current locale
-"Hello world".t('ar')   // Specific locale
-```
-
-### `t(text, locale?)`
-
-Standalone translate function (doesn't extend String.prototype).
-
-```ts
-import { t } from 'z18n';
-t("Hello world")        // Current locale
-t("Hello world", 'ar')  // Specific locale
-```
-
-### `z18n.setLanguage(locale)`
-
-Switch the active language. Notifies all listeners and updates DOM.
-
-### `z18n.getLocale()`
-
-Get the current locale code.
-
-### `z18n.toggleLanguage()`
-
-Toggle between base locale and first target locale.
-
-### `z18n.onChange(callback)`
-
-Subscribe to language changes. Returns an unsubscribe function.
-
-```ts
-const unsub = z18n.onChange((newLocale, oldLocale) => {
-  console.log(`Language changed: ${oldLocale} → ${newLocale}`);
-});
-// Later: unsub();
-```
-
-### `z18n.loadTranslations(locale, translations)`
-
-Manually load translations for a locale.
-
-### `z18n.destroy()`
-
-Clean up DOM observer and remove String.prototype extension.
-
-## Configuration
-
-### `z18n.config.json`
-
-```json
-{
-  "baseLocale": "en",
-  "languages": [
-    { "code": "en", "name": "English", "nativeName": "English", "direction": "ltr", "isSource": true },
-    { "code": "ar", "name": "Arabic", "nativeName": "العربية", "direction": "rtl" },
-    { "code": "fr", "name": "French", "nativeName": "Français", "direction": "ltr" }
-  ],
-  "translationsDir": "./translations",
-  "srcDirs": ["./src"],
-  "includePatterns": ["**/*.ts", "**/*.tsx", "**/*.html", "**/*.jsx", "**/*.vue"],
-  "excludePatterns": ["**/node_modules/**", "**/dist/**"],
-  "llm": {
-    "provider": "openai",
-    "model": "gpt-4o-mini",
-    "batchSize": 20,
-    "reviewRequired": true
-  }
-}
-```
+---
 
 ## How It Works
 
@@ -233,6 +127,108 @@ Whitespace is trimmed before hashing but preserved in output:
 "  Hello world  ".t()  →  "  مرحبا بالعالم  "
 " Hello world ".t()    →  " مرحبا بالعالم "
 ```
+
+---
+
+## CLI Tools
+
+### Extract — Scan code, update translation files
+
+```bash
+bun run src/cli/extract.ts
+```
+
+Finds `"text".t()` in `.ts`/`.tsx` and `<tag z18n>text</tag>` in `.html`/`.vue`/`.jsx`, then updates translation files with new entries.
+
+### Translate — Auto-fill missing translations with LLM
+
+```bash
+bun run src/cli/translate.ts
+```
+
+Supports **OpenAI** (gpt-4o-mini), **Anthropic** (claude-haiku), and **Ollama** (local).
+
+---
+
+## API Reference
+
+| Method | Description |
+|--------|-------------|
+| `z18n.init(config)` | Initialize. Call once at startup. |
+| `"text".t(locale?)` | Translate a string. Uses current locale if omitted. |
+| `t(text, locale?)` | Standalone translate (no String.prototype extension). |
+| `z18n.setLanguage(locale)` | Switch active language. Updates all DOM elements. |
+| `z18n.getLocale()` | Get current locale code. |
+| `z18n.toggleLanguage()` | Toggle between base and target language. |
+| `z18n.onChange(fn)` | Subscribe to language changes. Returns unsubscribe function. |
+| `z18n.loadTranslations(locale, obj)` | Manually load translations for a locale. |
+| `z18n.destroy()` | Clean up DOM observer and String.prototype extension. |
+
+### `z18n.init(config)`
+
+```ts
+await z18n.init({
+  baseLocale: 'en',              // Source language (never translated)
+  currentLocale: 'ar',           // Active language
+  translationsPath: '/translations',  // Path to .jsonc files
+  languages: [...],               // Available languages
+  observeDOM: true,               // Auto-observe [z18n] elements (default: true in browser)
+});
+```
+
+### `z18n.onChange(callback)`
+
+```ts
+const unsub = z18n.onChange((newLocale, oldLocale) => {
+  console.log(`Language changed: ${oldLocale} → ${newLocale}`);
+});
+// Later: unsub();
+```
+
+---
+
+## Configuration
+
+### `z18n.config.json`
+
+```json
+{
+  "baseLocale": "en",
+  "languages": [
+    { "code": "en", "name": "English", "nativeName": "English", "direction": "ltr", "isSource": true },
+    { "code": "ar", "name": "Arabic", "nativeName": "العربية", "direction": "rtl" },
+    { "code": "fr", "name": "French", "nativeName": "Français", "direction": "ltr" }
+  ],
+  "translationsDir": "./translations",
+  "srcDirs": ["./src"],
+  "includePatterns": ["**/*.ts", "**/*.tsx", "**/*.html", "**/*.jsx", "**/*.vue"],
+  "excludePatterns": ["**/node_modules/**", "**/dist/**"],
+  "llm": {
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "apiKey": "sk-...",
+    "batchSize": 20,
+    "reviewRequired": true
+  }
+}
+```
+
+---
+
+## Why z18n?
+
+| Feature | z18n | Traditional i18n |
+|---------|------|------------------|
+| Key management | **Automatic** (MD5 hash) | Manual (`login.title`) |
+| Source language file | **Not needed** | Required (`en.json`) |
+| Code readability | `"Hello world".t()` | `t('login.title')` — what's the text? |
+| Whitespace handling | **Trimmed for hashing, preserved in output** | Fragile — extra space = different key |
+| HTML integration | `<h1 z18n>text</h1>` | Framework-specific directives |
+| Missing translations | Fallback to original text | `login.title` shown to users |
+| Auto-translation | **Built-in LLM pipeline** | Manual or external |
+| Framework support | **Any** (vanilla, React, Vue, Angular, Svelte) | Framework-specific packages |
+
+---
 
 ## Build
 

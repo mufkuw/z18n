@@ -4,8 +4,14 @@
  * @example
  * import { z18n } from 'z18n';
  * 
+ * // Simple — just language codes!
  * await z18n.init({
- *   baseLocale: 'en',
+ *   languages: ['en', 'ar', 'fr'],
+ *   translationsPath: '/translations',
+ * });
+ * 
+ * // Full config still works
+ * await z18n.init({
  *   languages: [
  *     { code: 'en', name: 'English', nativeName: 'English', direction: 'ltr', isSource: true },
  *     { code: 'ar', name: 'Arabic', nativeName: 'العربية', direction: 'rtl' },
@@ -201,6 +207,7 @@ export function t(text: string, locale?: string): string {
 export type {
     LangConfig,
     LanguageConfig,
+    LanguageCode,
     LLMConfig,
     LangChangeListener,
     ExtractConfig,
@@ -246,6 +253,7 @@ export {
 
 export {
     validateLanguages,
+    resolveLanguages,
     getSourceLanguage,
     getLanguageByCode,
     getTargetLanguages,

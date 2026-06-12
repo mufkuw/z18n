@@ -15,6 +15,8 @@
  */
 
 import { md5, extractWhitespace } from '../core/hash';
+import { resolveLanguages } from '../core/lang-config';
+import type { LanguageConfig } from '../types/index';
 import { parseJsoncWithSources, serializeJsonc } from '../loader/translation-loader';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -31,13 +33,7 @@ interface ExtractedString {
 
 interface ExtractConfig {
     baseLocale: string;
-    languages: Array<{
-        code: string;
-        name: string;
-        nativeName: string;
-        direction: 'ltr' | 'rtl';
-        isSource?: boolean;
-    }>;
+    languages: Array<LanguageConfig | string>;
     srcDirs: string[];
     translationsDir: string;
     includePatterns: string[];
@@ -213,7 +209,10 @@ function main(): void {
         excludePatterns: userConfig.excludePatterns ?? DEFAULT_CONFIG.excludePatterns ?? [],
     };
 
-    if (config.languages.length === 0) {
+    // Resolve shorthand language codes into full configs
+    const resolvedLanguages: LanguageConfig[] = resolveLanguages(config.languages);
+
+    if (resolvedLanguages.length === 0) {
         console.error('❌ No languages configured. Add languages to z18n.config.json');
         process.exit(1);
     }
@@ -247,7 +246,7 @@ function main(): void {
     }
 
     // Process each target language
-    const targetLanguages = config.languages.filter(l => !l.isSource);
+    const targetLanguages = resolvedLanguages.filter(l => !l.isSource);
 
     for (const lang of targetLanguages) {
         const langFile = path.join(translationsDir, `${lang.code}.jsonc`);

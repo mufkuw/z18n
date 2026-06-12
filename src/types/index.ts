@@ -15,6 +15,12 @@ export interface LanguageConfig {
 }
 
 /**
+ * Shorthand language entry — just a code string like 'en' or 'ar'.
+ * Will be auto-resolved to a full LanguageConfig using the built-in language database.
+ */
+export type LanguageCode = string;
+
+/**
  * Initialization configuration for z18n
  */
 export interface LangConfig {
@@ -22,8 +28,8 @@ export interface LangConfig {
     baseLocale?: string;
     /** Current locale code (default: baseLocale) */
     currentLocale?: string;
-    /** Available languages */
-    languages: LanguageConfig[];
+    /** Available languages — accept shorthand codes like ['en', 'ar'] or full config objects */
+    languages: Array<LanguageConfig | LanguageCode>;
     /** Path to translations directory (browser: URL, Node: file path) */
     translationsPath?: string;
     /** Whether to auto-observe DOM for [z18n] attributes (default: true in browser) */

@@ -1,8 +1,8 @@
 import { config } from './config-store';
 import { Dictionary } from './dictionary';
 import { hashString, extractWhitespace, applyWhitespace } from './hash';
-import { validateLanguages, getSourceLanguage } from './lang-config';
-import type { LangConfig, LangChangeListener } from '../types/index';
+import { validateLanguages, getSourceLanguage, resolveLanguages } from './lang-config';
+import type { LangConfig, LangChangeListener, LanguageConfig } from '../types/index';
 
 /**
  * LangService — the core translation engine for z18n.
@@ -27,6 +27,9 @@ export class LangService {
      * Call this once at app startup.
      */
     init(userConfig: LangConfig): void {
+        // Resolve shorthand languages (string codes) into full configs
+        const languages: LanguageConfig[] = resolveLanguages(userConfig.languages);
+
         // Merge with defaults
         const baseLocale = userConfig.baseLocale ?? 'en';
         const currentLocale = userConfig.currentLocale ?? baseLocale;
@@ -34,7 +37,7 @@ export class LangService {
         config.baseLocale = baseLocale;
         config.currentLocale = currentLocale;
         config.translationsPath = userConfig.translationsPath;
-        config.languages = userConfig.languages;
+        config.languages = languages;
         config.observeDOM = userConfig.observeDOM ?? (typeof window !== 'undefined');
 
         // Validate

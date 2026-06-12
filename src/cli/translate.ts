@@ -13,6 +13,8 @@
  */
 
 import { md5 } from '../core/hash';
+import { resolveLanguages } from '../core/lang-config';
+import type { LanguageConfig } from '../types/index';
 import { parseJsoncWithSources, serializeJsonc } from '../loader/translation-loader';
 import type { LLMConfig } from '../types/index';
 import * as fs from 'fs';
@@ -22,13 +24,7 @@ import * as path from 'path';
 
 interface TranslateConfig {
     baseLocale: string;
-    languages: Array<{
-        code: string;
-        name: string;
-        nativeName: string;
-        direction: 'ltr' | 'rtl';
-        isSource?: boolean;
-    }>;
+    languages: Array<LanguageConfig | string>;
     translationsDir: string;
     llm: LLMConfig;
 }
@@ -248,7 +244,9 @@ async function main(): Promise<void> {
         process.exit(1);
     }
 
-    const targetLanguages = config.languages.filter(l => !l.isSource);
+    // Resolve shorthand language codes into full configs
+    const resolvedLanguages: LanguageConfig[] = resolveLanguages(config.languages);
+    const targetLanguages = resolvedLanguages.filter(l => !l.isSource);
     const translationsDir = path.resolve(config.translationsDir || './translations');
     const batchSize = config.llm.batchSize || 20;
     const reviewRequired = config.llm.reviewRequired !== false; // default true
