@@ -59,19 +59,28 @@ function findFiles(srcDirs: string[], includePatterns: string[], excludePatterns
     // Simple glob implementation — in production, use a proper glob library
     const files: string[] = [];
 
+    // Derive allowed extensions from include patterns once
+    const extensions = includePatterns
+        .map(p => {
+            const match = p.match(/\.(\w+)$/);
+            return match ? '.' + match[1] : null;
+        })
+        .filter((ext): ext is string => ext !== null);
+    const allowedExtensions = extensions.length > 0 ? extensions : ['.ts', '.tsx', '.html', '.jsx', '.vue'];
+
     for (const srcDir of srcDirs) {
         const absDir = path.resolve(srcDir);
         if (!fs.existsSync(absDir)) {
             console.warn(`⚠️  Source directory not found: ${absDir}`);
             continue;
         }
-        walkDir(absDir, files, includePatterns, excludePatterns);
+        walkDir(absDir, files, allowedExtensions, excludePatterns);
     }
 
     return files;
 }
 
-function walkDir(dir: string, files: string[], includes: string[], excludes: string[]): void {
+function walkDir(dir: string, files: string[], allowedExtensions: string[], excludes: string[]): void {
     const entries = fs.readdirSync(dir, { withFileTypes: true });
 
     for (const entry of entries) {
@@ -81,13 +90,12 @@ function walkDir(dir: string, files: string[], includes: string[], excludes: str
             // Skip excluded directories
             const relativePath = fullPath.replace(/\\/g, '/');
             if (excludes.some(pattern => matchPattern(relativePath, pattern))) continue;
-            walkDir(fullPath, files, includes, excludes);
+            walkDir(fullPath, files, allowedExtensions, excludes);
         } else {
             const relativePath = fullPath.replace(/\\/g, '/');
-            // Check includes
-            const ext = path.extname(entry.name);
-            const extensions = ['.ts', '.tsx', '.html', '.jsx', '.vue'];
-            if (!extensions.includes(ext)) continue;
+            // Check extensions
+            const ext = path.extname(entry.name).toLowerCase();
+            if (!allowedExtensions.includes(ext)) continue;
 
             // Check excludes
             if (excludes.some(pattern => matchPattern(relativePath, pattern))) continue;
@@ -104,12 +112,16 @@ function matchPattern(filePath: string, pattern: string): boolean {
         .replace(/§§/g, '.*')
         .replace(/§/g, '[^/]*')
         .replace(/\./g, '\\.');
-    return new RegExp(regex).test(filePath);
+    return new RegExp(`^${regex}$`).test(filePath);
 }
 
 /**
  * Extract translatable strings from TypeScript/TSX files.
- * Matches patterns: "text".t() and 'text'.t()
+ * Matches patterns: "text".t(), 'text'.t(), and `text`.t()
+ *
+ * Note: This uses regex-based extraction and will match inside
+ * comments (e.g., // "Hello".t()) and strings. A proper AST-based
+ * extractor would be needed to avoid false positives.
  */
 function extractFromTS(content: string, filePath: string): ExtractedString[] {
     const results: ExtractedString[] = [];
@@ -117,9 +129,10 @@ function extractFromTS(content: string, filePath: string): ExtractedString[] {
     // Match "text".t() and 'text'.t()
     const singleQuoteRegex = /'([^']+)'\s*\.t\s*\(\s*(?:'[^']*'|"[^"]*")?\s*\)/g;
     const doubleQuoteRegex = /"([^"]+)"\s*\.t\s*\(\s*(?:'[^']*'|"[^"]*")?\s*\)/g;
+    // Match `text`.t() — template literals (single-line only)
+    const backtickRegex = /`([^`]+)`\s*\.t\s*\(\s*(?:'[^']*'|"[^"]*"|`[^`]*`)?\s*\)/g;
 
     let match: RegExpExecArray | null;
-    const lines = content.split('\n');
 
     // Double quotes
     while ((match = doubleQuoteRegex.exec(content)) !== null) {
@@ -139,12 +152,26 @@ function extractFromTS(content: string, filePath: string): ExtractedString[] {
         results.push({ text, trimmed: ws.trimmed, hash, file: filePath, line: lineNum });
     }
 
+    // Template literals (backticks)
+    while ((match = backtickRegex.exec(content)) !== null) {
+        const text = match[1];
+        const ws = extractWhitespace(text);
+        const hash = md5(ws.trimmed);
+        const lineNum = content.substring(0, match.index).split('\n').length;
+        results.push({ text, trimmed: ws.trimmed, hash, file: filePath, line: lineNum });
+    }
+
     return results;
 }
 
 /**
  * Extract translatable strings from HTML/JSX/VUE files.
  * Matches patterns: <tag z18n>text</tag>
+ *
+ * Limitations:
+ * - Does not handle self-closing tags with z18n (e.g., <br z18n/>)
+ * - Does not extract text from elements with nested child elements
+ * - Does not handle > characters inside attribute values before text content
  */
 function extractFromHTML(content: string, filePath: string): ExtractedString[] {
     const results: ExtractedString[] = [];
@@ -210,7 +237,7 @@ function main(): void {
     };
 
     // Resolve shorthand language codes into full configs
-    const resolvedLanguages: LanguageConfig[] = resolveLanguages(config.languages);
+    const resolvedLanguages: LanguageConfig[] = resolveLanguages(config.languages, config.baseLocale);
 
     if (resolvedLanguages.length === 0) {
         console.error('❌ No languages configured. Add languages to z18n.config.json');

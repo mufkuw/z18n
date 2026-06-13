@@ -1,5 +1,11 @@
 import { LangService } from '../core/lang-service';
-import { extractWhitespace, hashString } from '../core/hash';
+
+/**
+ * Module-level reference to the current LangService.
+ * This allows String.prototype.t() to always use the latest service
+ * even after re-initialization.
+ */
+let currentLangService: LangService | null = null;
 
 /**
  * Initialize the String.prototype.t() extension method.
@@ -9,17 +15,24 @@ import { extractWhitespace, hashString } from '../core/hash';
  *   "Hello world".t('ar')
  * 
  * Must be called after z18n.init() to have access to the service.
+ * Can be called multiple times — the service reference is updated.
  */
 export function initStringExtension(langService: LangService): void {
-    // Extend String.prototype with .t() method
+    // Always update the service reference
+    currentLangService = langService;
+
+    // Only define String.prototype.t once
     if (typeof String.prototype.t === 'function') {
-        // Already initialized — just update the service reference
         return;
     }
 
     Object.defineProperty(String.prototype, 't', {
         value: function (this: string, locale?: string): string {
-            return langService.translate(this, locale);
+            if (!currentLangService) {
+                console.warn('[z18n] String.prototype.t() called before init. Returning original string.');
+                return this;
+            }
+            return currentLangService.translate(this, locale);
         },
         writable: false,
         configurable: true,
@@ -35,6 +48,8 @@ export function removeStringExtension(): void {
     if (typeof String.prototype.t === 'function') {
         delete (String.prototype as any).t;
     }
+    // Clear the service reference so .t() cannot use stale state
+    currentLangService = null;
 }
 
 /**

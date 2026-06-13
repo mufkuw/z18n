@@ -45,13 +45,8 @@ npm install z18n
 import { z18n } from 'z18n';
 
 await z18n.init({
-  baseLocale: 'en',
-  currentLocale: 'ar',
+  languages: ['en', 'ar'],    // Just codes — name, nativeName, direction auto-filled!
   translationsPath: '/translations',
-  languages: [
-    { code: 'en', name: 'English', nativeName: 'English', direction: 'ltr', isSource: true },
-    { code: 'ar', name: 'Arabic', nativeName: 'العربية', direction: 'rtl' },
-  ],
 });
 ```
 
@@ -168,11 +163,20 @@ Supports **OpenAI** (gpt-4o-mini), **Anthropic** (claude-haiku), and **Ollama** 
 
 ```ts
 await z18n.init({
-  baseLocale: 'en',              // Source language (never translated)
-  currentLocale: 'ar',           // Active language
-  translationsPath: '/translations',  // Path to .jsonc files
-  languages: [...],               // Available languages
-  observeDOM: true,               // Auto-observe [z18n] elements (default: true in browser)
+  languages: ['en', 'ar', 'fr'],       // Simple codes or full objects
+  // baseLocale defaults to first language code ('en')
+  // currentLocale defaults to baseLocale
+  translationsPath: '/translations',    // Path to .jsonc files
+  observeDOM: true,                     // Auto-observe [z18n] elements (default: true in browser)
+});
+
+// Still supports full objects for custom/unknown languages:
+await z18n.init({
+  languages: [
+    { code: 'en', isSource: true },
+    { code: 'klingon', name: 'Klingon', nativeName: 'tlhIngan Hol', direction: 'ltr' },
+  ],
+  translationsPath: '/translations',
 });
 ```
 
@@ -189,16 +193,13 @@ const unsub = z18n.onChange((newLocale, oldLocale) => {
 
 ## Configuration
 
+Create a `z18n.config.json` in **your app's project root** (not inside z18n itself):
+
 ### `z18n.config.json`
 
 ```json
 {
-  "baseLocale": "en",
-  "languages": [
-    { "code": "en", "name": "English", "nativeName": "English", "direction": "ltr", "isSource": true },
-    { "code": "ar", "name": "Arabic", "nativeName": "العربية", "direction": "rtl" },
-    { "code": "fr", "name": "French", "nativeName": "Français", "direction": "ltr" }
-  ],
+  "languages": ["en", "ar", "fr"],
   "translationsDir": "./translations",
   "srcDirs": ["./src"],
   "includePatterns": ["**/*.ts", "**/*.tsx", "**/*.html", "**/*.jsx", "**/*.vue"],
@@ -212,6 +213,18 @@ const unsub = z18n.onChange((newLocale, oldLocale) => {
   }
 }
 ```
+
+| Field | Used by | Description |
+|-------|---------|-------------|
+| `languages` | Runtime + CLI | Language codes or full objects. First = source language. |
+| `baseLocale` | Runtime | Defaults to first language code. |
+| `translationsDir` | CLI | Where `.jsonc` files are stored. |
+| `srcDirs` | CLI | Source directories to scan for strings. |
+| `includePatterns` | CLI | File patterns to include in extraction. |
+| `excludePatterns` | CLI | File patterns to skip. |
+| `llm` | CLI | LLM provider config for auto-translation. |
+
+> **Shorthand:** Just use language codes — `name`, `nativeName`, `direction` are auto-filled from a built-in database of 20 common languages. Use a full object only for languages not in the database.
 
 ---
 

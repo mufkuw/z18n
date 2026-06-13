@@ -42,10 +42,12 @@ function stripJsoncComments(text: string): string {
             // Block comment
             if (text[i + 1] === '*') {
                 i += 2;
-                while (i < text.length - 1 && !(text[i] === '*' && text[i + 1] === '/')) {
+                while (i < text.length && !(text[i] === '*' && i + 1 < text.length && text[i + 1] === '/')) {
                     i++;
                 }
-                i++; // skip the '/'
+                if (i < text.length) {
+                    i++; // skip past the '/'
+                }
                 continue;
             }
         }
@@ -80,21 +82,22 @@ export function parseJsoncWithSources(text: string): {
     translations: Record<string, string>;
     sources: Record<string, string>;
 } {
-    const translations: Record<string, string> = {};
+    // First, parse the JSONC content using the robust parser
+    const stripped = stripJsoncComments(text);
+    const translations: Record<string, string> = JSON.parse(stripped);
+
+    // Then, extract source comments from the original text line by line
     const sources: Record<string, string> = {};
-
-    // Match lines like: "hash": "translation",  // source text
-    const lineRegex = /^\s*"([^"]+)"\s*:\s*"([^"]*)"\s*,?\s*(?:\/\/\s*(.*))?\s*$/gm;
-    let match;
-
-    while ((match = lineRegex.exec(text)) !== null) {
-        const hash = match[1];
-        const translation = match[2];
-        const source = match[3]?.trim() || '';
-
-        translations[hash] = translation;
-        if (source) {
-            sources[hash] = source;
+    const lines = text.split('\n');
+    for (const line of lines) {
+        // Match lines like: "hash": "translation",  // source text
+        const sourceMatch = line.match(/^\s*"([^"]+)"\s*:\s*.*?\s*,?\s*\/\/\s*(.+)\s*$/);
+        if (sourceMatch) {
+            const hash = sourceMatch[1];
+            const source = sourceMatch[2].trim();
+            if (source) {
+                sources[hash] = source;
+            }
         }
     }
 
@@ -132,6 +135,19 @@ export function loadFromString(
  * Serialize translations to JSONC format with source comments.
  * Each entry includes the source English text as a comment.
  */
+/**
+ * Escape a string value for safe inclusion in JSON/JSONC output.
+ * Handles backslashes, double quotes, and control characters.
+ */
+function escapeJsonString(value: string): string {
+    return value
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r')
+        .replace(/\t/g, '\\t');
+}
+
 export function serializeJsonc(
     translations: Record<string, string>,
     sources?: Record<string, string>,
@@ -143,7 +159,7 @@ export function serializeJsonc(
     for (const [hash, translation] of entries) {
         const source = sources?.[hash];
         const comment = source ? `  // ${source}` : '';
-        lines.push(`  "${hash}": "${translation}",${comment}`);
+        lines.push(`  "${hash}": "${escapeJsonString(translation)}",${comment}`);
     }
 
     lines.push('}');
@@ -189,6 +205,8 @@ export async function loadAllTranslations(
             const exists = fs.existsSync(filePath);
             if (exists) {
                 await loadFromFile(filePath, dictionary, locale);
+            } else {
+                console.warn(`[z18n] Translation file not found: ${filePath}. Skipping locale "${locale}".`);
             }
         }
     });

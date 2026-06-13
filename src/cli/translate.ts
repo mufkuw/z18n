@@ -38,10 +38,6 @@ interface TranslationRequest {
     strings: Array<{ hash: string; text: string }>;
 }
 
-interface TranslationResponse {
-    translations: Record<string, string>;
-}
-
 async function callOpenAI(request: TranslationRequest, config: LLMConfig): Promise<Record<string, string>> {
     const apiKey = config.apiKey || process.env.OPENAI_API_KEY;
     if (!apiKey) {
@@ -245,7 +241,7 @@ async function main(): Promise<void> {
     }
 
     // Resolve shorthand language codes into full configs
-    const resolvedLanguages: LanguageConfig[] = resolveLanguages(config.languages);
+    const resolvedLanguages: LanguageConfig[] = resolveLanguages(config.languages, config.baseLocale);
     const targetLanguages = resolvedLanguages.filter(l => !l.isSource);
     const translationsDir = path.resolve(config.translationsDir || './translations');
     const batchSize = config.llm.batchSize || 20;

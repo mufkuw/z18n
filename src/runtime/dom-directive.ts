@@ -1,5 +1,4 @@
 import { LangService } from '../core/lang-service';
-import { hashString } from '../core/hash';
 
 /**
  * DOM Translation Directive — observes elements with [z18n] attribute
@@ -27,7 +26,7 @@ export class DOMDirective {
     }
 
     /**
-     * Start observing the DOM for [translate] elements.
+     * Start observing the DOM for [z18n] elements.
      */
     start(): void {
         if (this.active) return;
@@ -43,9 +42,22 @@ export class DOMDirective {
             this.translateAll();
         });
 
-        // Watch for DOM mutations (new elements added)
+        // Watch for DOM mutations (new elements added, old elements removed)
         this.observer = new MutationObserver((mutations) => {
             for (const mutation of mutations) {
+                // Clean up removed elements to prevent memory leaks
+                for (const node of mutation.removedNodes) {
+                    if (node instanceof Element) {
+                        this.elements.delete(node);
+                        // Also clean up children
+                        const translatables = node.querySelectorAll('[z18n]');
+                        for (const child of translatables) {
+                            this.elements.delete(child);
+                        }
+                    }
+                }
+
+                // Process newly added elements
                 for (const node of mutation.addedNodes) {
                     if (node instanceof Element) {
                         this.processElement(node);

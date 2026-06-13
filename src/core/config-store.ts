@@ -5,7 +5,6 @@ import type { LanguageConfig } from '../types/index';
  */
 const DEFAULTS = {
     baseLocale: 'en',
-    observeDOM: typeof window !== 'undefined',
 };
 
 /**
@@ -23,7 +22,7 @@ export class LangConfigStore {
         this.baseLocale = DEFAULTS.baseLocale;
         this.currentLocale = DEFAULTS.baseLocale;
         this.languages = [];
-        this.observeDOM = DEFAULTS.observeDOM;
+        this.observeDOM = false; // Will be set properly in init()
         this.translationsPath = undefined;
     }
 

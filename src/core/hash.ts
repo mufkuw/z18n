@@ -36,6 +36,9 @@ for (let i = 0; i < 64; i++) {
 /**
  * MD5 hash function — produces a 32-character hex string.
  * Deterministic: same input always produces the same output.
+ *
+ * NOTE: This is NOT suitable for cryptographic purposes.
+ * It is used solely for generating deterministic translation keys.
  */
 export function md5(input: string): string {
     const bytes = new TextEncoder().encode(input);

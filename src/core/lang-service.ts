@@ -28,7 +28,8 @@ export class LangService {
      */
     init(userConfig: LangConfig): void {
         // Resolve shorthand languages (string codes) into full configs
-        const languages: LanguageConfig[] = resolveLanguages(userConfig.languages);
+        // Pass baseLocale so resolveLanguages can mark the correct source language
+        const languages: LanguageConfig[] = resolveLanguages(userConfig.languages, userConfig.baseLocale);
 
         // Merge with defaults
         const baseLocale = userConfig.baseLocale ?? 'en';

@@ -91,7 +91,3 @@ export interface WhitespaceInfo {
     trimmed: string;
 }
 
-/**
- * Result of the translate function
- */
-export type TranslateResult = string;

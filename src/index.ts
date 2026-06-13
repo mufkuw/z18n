@@ -54,6 +54,14 @@ export const z18n = {
      * @param userConfig - Configuration for the z18n system
      */
     async init(userConfig: LangConfig): Promise<void> {
+        // Clean up any previous state before re-initializing
+        if (domDirective) {
+            domDirective.stop();
+            domDirective = null;
+        }
+        removeStringExtension();
+        dictionary.clear();
+
         // Initialize the service
         langService.init(userConfig);
 
@@ -200,6 +208,7 @@ export function t(text: string, locale?: string): string {
         return tFunction(text, locale);
     }
     // Fallback if not initialized
+    console.warn('[z18n] t() called before init. Returning original string.');
     return text;
 }
 

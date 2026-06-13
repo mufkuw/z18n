@@ -21,8 +21,11 @@ export const DEFAULT_LANGUAGES: LanguageConfig[] = [
  * - Simple string codes: 'en', 'ar', 'fr'
  * - Partial objects: { code: 'ar' } — name/nativeName/direction auto-filled
  * - Full objects: { code: 'ar', name: 'Arabic', nativeName: 'العربية', direction: 'rtl' }
+ *
+ * @param input - Array of language codes or config objects
+ * @param baseLocale - Optional base locale to mark as source language
  */
-export function resolveLanguages(input: Array<string | LanguageConfig>): LanguageConfig[] {
+export function resolveLanguages(input: Array<string | LanguageConfig>, baseLocale?: string): LanguageConfig[] {
     return input.map((entry, index) => {
         if (typeof entry === 'string') {
             const known = knownLanguages[entry as keyof typeof knownLanguages];
@@ -38,7 +41,7 @@ export function resolveLanguages(input: Array<string | LanguageConfig>): Languag
                 name: known.name,
                 nativeName: known.nativeName,
                 direction: known.direction as 'ltr' | 'rtl',
-                isSource: index === 0,
+                isSource: baseLocale ? entry === baseLocale : index === 0,
             };
         }
 
@@ -49,7 +52,7 @@ export function resolveLanguages(input: Array<string | LanguageConfig>): Languag
             name: entry.name ?? known?.name ?? entry.code.toUpperCase(),
             nativeName: entry.nativeName ?? known?.nativeName ?? entry.code.toUpperCase(),
             direction: entry.direction ?? (known?.direction as 'ltr' | 'rtl' | undefined) ?? 'ltr',
-            isSource: entry.isSource ?? (index === 0),
+            isSource: entry.isSource ?? (baseLocale ? entry.code === baseLocale : index === 0),
         };
     });
 }
