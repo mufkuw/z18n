@@ -36,7 +36,7 @@ Adding i18n to a project is painful:
 **1. Install**
 
 ```bash
-npm install z18n
+npm install github:<your-github-username>/z18n
 ```
 
 **2. Initialize** (once at app startup)
